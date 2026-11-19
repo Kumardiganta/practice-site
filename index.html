@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Practice & Attendance Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans">
+
+  <!-- ================= SITE PASSWORD LOCK SCREEN ================= -->
+  <div id="siteLockScreen" class="fixed inset-0 z-50 bg-slate-900/95 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-5">
+      <div class="text-center space-y-1.5">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-2xl font-bold" aria-hidden="true">&#128274;</div>
+        <h2 class="text-xl font-bold text-slate-900">PracticeTracker Access</h2>
+        <p class="text-xs text-slate-500">Enter the site password to open the Daily Practice &amp; Attendance Portal</p>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label for="sitePasswordInput" class="block text-xs font-semibold uppercase text-slate-600 mb-1">Site Password</label>
+          <div class="relative">
+            <input id="sitePasswordInput" type="password" autocomplete="current-password" placeholder="Enter site password"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();unlockSite();}"
+              class="w-full border border-slate-300 rounded-xl pl-3 pr-16 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+            <button type="button" id="toggleSitePwBtn" onclick="toggleSitePasswordVisibility()"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg">Show</button>
+          </div>
+        </div>
+        <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+          <input id="rememberSiteUnlock" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+          Keep unlocked until this browser tab is closed
+        </label>
+        <p id="siteLockError" class="hidden text-xs font-semibold text-rose-600">Incorrect site password. Please try again.</p>
+        <button type="button" onclick="unlockSite()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm py-2.5 rounded-xl shadow transition">
+          Unlock Portal &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP NAVBAR -->
+  <header id="appHeader" class="hidden bg-indigo-900 text-white px-4 py-3 shadow-md flex justify-between items-center gap-2">
+    <div>
+      <h1 class="text-lg font-bold tracking-wide">PracticeTracker</h1>
+      <p id="navSubtext" class="text-xs text-indigo-200">Chemistry & Physics Daily Assessment</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="syncBadge" onclick="syncNow(event)" class="text-xs px-2.5 py-1 rounded-full font-semibold bg-slate-200 text-slate-700" title="Click to sync now">Local only</button>
+      <button id="homeBtn" onclick="goHome()" class="hidden bg-indigo-700 hover:bg-indigo-600 text-xs px-3 py-1.5 rounded-lg font-medium">
+        Home / Switch Subject
+      </button>
+      <button id="lockSiteBtn" onclick="lockSite()" class="bg-indigo-800 hover:bg-indigo-700 border border-indigo-600 text-xs px-2.5 py-1.5 rounded-lg font-medium" title="Lock portal">
+        &#128274; Lock
+      </button>
+    </div>
+  </header>
+
+  <main id="appMain" class="hidden max-w-4xl mx-auto p-4 space-y-6">
+
+    <!-- ================= SCREEN 1: HOMEPAGE (GRAPHS + LOGIN) ================= -->
+    <section id="screenHome" class="space-y-6">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-base font-bold text-slate-800">Overall Practice Progress (Graphical View)</h2>
+          <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-semibold">Live Stats</span>
+        </div>
+        <div id="graphContainer" class="space-y-4"></div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md mx-auto">
+        <h2 class="text-lg font-bold text-slate-800 mb-1">Teacher Portal Login</h2>
+        <p class="text-xs text-slate-500 mb-4">Select subject and enter your teacher passcode</p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Select Subject</label>
+            <select id="subjectSelect" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="Chemistry">Chemistry</option>
+              <option value="Physics">Physics</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Teacher Name</label>
+            <input id="teacherNameInput" type="text" placeholder="e.g., Chemistry Sir / Physics Sir" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Teacher Passcode</label>
+            <input id="teacherCodeInput" type="password" placeholder="Enter passcode" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+          </div>
+          <p id="loginError" class="text-xs text-red-600 hidden font-medium">Please enter your name and the correct passcode.</p>
+          <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl shadow transition">
+            Proceed to Group Selection &rarr;
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN 2: CHOOSE GROUP A OR B ================= -->
+    <section id="screenGroup" class="hidden space-y-5">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-lg font-bold text-slate-800" id="groupGreeting">Select Student Group</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Choose Group A or Group B to record or collect daily practice</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+          <button onclick="selectGroup('Group A')" class="p-5 rounded-2xl border-2 border-indigo-100 hover:border-indigo-600 bg-indigo-50/40 text-left transition group">
+            <div class="flex justify-between items-center">
+              <span class="text-xl font-bold text-indigo-950 group-hover:text-indigo-600">Group A</span>
+              <span id="badgeGroupA" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-semibold">0 Unfinished</span>
+            </div>
+            <p id="metaGroupA" class="text-xs text-slate-600 mt-2">Click to manage</p>
+          </button>
+          <button onclick="selectGroup('Group B')" class="p-5 rounded-2xl border-2 border-indigo-100 hover:border-indigo-600 bg-indigo-50/40 text-left transition group">
+            <div class="flex justify-between items-center">
+              <span class="text-xl font-bold text-indigo-950 group-hover:text-indigo-600">Group B</span>
+              <span id="badgeGroupB" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-semibold">0 Unfinished</span>
+            </div>
+            <p id="metaGroupB" class="text-xs text-slate-600 mt-2">Click to manage</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- NEW BATCH / DELETE DATA -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-200">
+        <button onclick="toggleResetPanel()" class="text-sm font-bold text-red-700">&#9888; Start a new batch / delete recorded data</button>
+        <div id="resetPanel" class="hidden mt-4 space-y-3">
+          <p class="text-xs text-slate-600">This permanently removes recorded attendance, topics and pending counts from this device <strong>and from the Google Sheet</strong>, on every device. Student names are not affected.</p>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">What to delete</label>
+            <select id="resetScope" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none">
+              <option id="resetScopeThis" value="THIS">Only this subject</option>
+              <option value="ALL">Both Chemistry and Physics</option>
+            </select>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-slate-700">
+            <input id="resetBackup" type="checkbox" checked class="h-4 w-4 rounded border-slate-300">
+            Download a backup file (CSV) first &mdash; recommended
+          </label>
+          <input id="resetConfirm" type="text" placeholder="Type RESET to confirm" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-400" />
+          <p id="resetMsg" class="text-xs font-semibold text-slate-700"></p>
+          <button id="resetBtn" onclick="runReset()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm py-2.5 rounded-xl">Delete data permanently</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN 3: PENDING FIRST, THEN TODAY'S SHEET ================= -->
+    <section id="screenAttendance" class="hidden space-y-5">
+
+      <!-- Context bar -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
+        <div>
+          <span id="activeContextBadge" class="text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-md"></span>
+          <h2 class="text-lg font-bold text-slate-800 mt-1">Daily Practice & Attendance Sheet</h2>
+        </div>
+        <button onclick="backToGroups()" class="text-xs text-indigo-600 hover:underline font-semibold">&larr; Change Group</button>
+        <button onclick="deleteAllAttendance()" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 font-semibold px-3 py-1.5 rounded-lg border border-red-200">Delete All Attendance</button>
+      </div>
+
+      <!-- PREVIOUS UNFINISHED PRACTICE (TOP) -->
+      <div id="carryForwardBox" class="bg-amber-50 border border-amber-200 p-4 rounded-2xl space-y-3">
+        <div class="flex items-start gap-3">
+          <span id="carryCount" class="shrink-0 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">0 Unfinished</span>
+          <div>
+            <h3 class="text-sm font-bold text-amber-950">Previous Unfinished Practice &mdash; Ask First in Class</h3>
+            <p class="text-xs text-amber-800 mt-0.5">Students marked <strong>Pending</strong> or <strong>Absent</strong> on earlier dates. When they answer in class, click <strong>Mark Previous Done &amp; Assign Next Topic</strong>.</p>
+          </div>
+        </div>
+        <p id="carrySummary" class="text-xs font-bold text-amber-900"></p>
+        <div id="carryForwardList" class="space-y-3 max-h-[32rem] overflow-y-auto"></div>
+      </div>
+
+      <!-- DATE + TOPIC -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">1. Practice Collection Date</label>
+            <input id="sessionDate" type="date" onchange="loadDateSession()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">2. Today's Practice Topic / Question</label>
+            <div class="flex gap-2">
+              <input id="sessionTopic" type="text" placeholder="e.g., VSEPR Theory / Ohm's Law Numericals" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <button onclick="startOrLoadTopic()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 rounded-xl shrink-0">Set Topic</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUDENT ROLL CALL -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex flex-wrap justify-between items-start gap-2">
+          <div>
+            <h3 class="text-base font-bold text-slate-800">Student Roll Call &amp; Practice Status</h3>
+            <p id="currentTopicLabel" class="text-xs text-indigo-600 font-medium mt-0.5"></p>
+          </div>
+          <span id="entryChip" class="text-xs font-bold px-3 py-1.5 rounded-full bg-amber-100 text-amber-800">Open for Entry</span>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="markAllBtn" onclick="markAllDone()" class="text-xs bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold px-4 py-2 rounded-xl">Mark All Done</button>
+            <button id="finalSubmitBtn" onclick="submitAttendance()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-2 rounded-xl shadow transition">
+              Final Submit Attendance
+            </button>
+            <button id="editModeBtn" onclick="toggleEditMode()" class="hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold px-4 py-2 rounded-xl">Edit Saved Data (On-Time Update)</button>
+            <span id="submitStatusMsg" class="text-xs font-semibold text-emerald-600"></span>
+          </div>
+          <!-- VIEW MODE TOGGLE -->
+          <div class="flex bg-slate-100 p-1 rounded-xl">
+            <button id="modeCardBtn" onclick="setStudentViewMode('card')" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">Card View</button>
+            <button id="modeListBtn" onclick="setStudentViewMode('list')" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">Full List View</button>
+          </div>
+        </div>
+
+        <!-- SESSION PROGRESS BAR -->
+        <div id="progressBox" class="bg-slate-50 border border-slate-200 rounded-2xl p-4"></div>
+
+        <!-- STUDENT ENTRY CONTAINER (Card or List) -->
+        <div id="studentListContainer"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- IN-PAGE NOTICE / CONFIRM MODAL -->
+  <div id="appDialogModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-5 space-y-4">
+      <h3 id="appDialogTitle" class="text-base font-bold text-slate-900">Notice</h3>
+      <p id="appDialogBody" class="text-sm text-slate-600 whitespace-pre-line"></p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="appDialogCancelBtn" onclick="closeAppDialog(false)" class="hidden px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100">Cancel</button>
+        <button id="appDialogOkBtn" onclick="closeAppDialog(true)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =====================================================================
+    // SETTINGS
+    // =====================================================================
+    // SECURITY NOTE: Values in a browser HTML file are visible to anyone who can inspect it.
+    // TEACHER_CODE and SYNC_TOKEN are convenience checks only, not secure authentication.
+    // For real protection, validate teacher identity and permissions inside the Apps Script/backend.
+    const CONFIG = {
+      SYNC_URL: "https://script.google.com/macros/s/AKfycbwwO-bo-7r9hhii_PRvJsZ0ge6e3iIJcIJXAUte1hKq_VyYGxT46TeXzh3v05ax6lZN/exec",
+      SYNC_TOKEN: "kumar-chem",
+      TEACHER_CODE: "1234",
+      // SHA-256 hash of the site-wide password.
+      // To change it, replace this hash with the SHA-256 hex digest of your new password.
+      SITE_PASSWORD_HASH: "9db1ef07116ec80a709030f14397fc8b8f267745ebec713f7ca07342cc07e143",
+      ALERT_AFTER: 3   // students with this many unfinished practices are highlighted red
+    };
+
+    // Full Student Rosters (Roll Numbers only)
+    const rosters = {
+      "Group A": [
+        { roll: "IS25-022", name: "GAYATRI PRADHAN" },
+        { roll: "IS25-061", name: "SOUMYARANJAN SAMAL" },
+        { roll: "IS25-030", name: "KRISHNA BEHERA" },
+        { roll: "IS25-004", name: "ANITA RANA" },
+        { roll: "IS25-025", name: "JAGNYASENI SIAL" },
+        { roll: "IS25-066", name: "SUPRAKASH PANDA" },
+        { roll: "IS25-042", name: "PRATIVA MANJARI SIAL" },
+        { roll: "IS25-064", name: "SUBHASMITA BEHERA" },
+        { roll: "IS25-015", name: "Adyasha Panda" },
+        { roll: "IS25-068", name: "DEBAJANI CHANDA" },
+        { roll: "IS25-011", name: "SWAGATIKA JENA" },
+        { roll: "IS25-026", name: "BIJAYALAXMI PADHI" },
+        { roll: "IS25-071", name: "JAYAPRAKASH NAYAK" },
+        { roll: "IS25-008", name: "M.K. IPSITA BEHERA" },
+        { roll: "IS25-008_2", name: "BARSHA PRIYADARSHANI NAYAK", displayRoll: "IS25-008" },
+        { roll: "IS25-017", name: "DEEPTIMAYEE BEHERA" },
+        { roll: "IS25-065", name: "SUBHRASEFALI NAYAK" },
+        { roll: "IS25-007", name: "AYUS DAS" },
+        { roll: "IS25-053", name: "ROHIT KUMAR BEHERA" },
+        { roll: "IS25-024", name: "HIMANSHU SIAL" },
+        { roll: "IS25-039", name: "PRAKASH KUMAR JENA" },
+        { roll: "IS25-033", name: "MOHIT KUMAR SAHU" },
+        { roll: "IS25-047", name: "PRIYANKA NAYAK" },
+        { roll: "IS25-067", name: "SUSIL KUMAR BARIK" },
+        { roll: "IS25-059", name: "SHUBHADIP MUDULI" }
+      ],
+      "Group B": [
+        { roll: "IS25-028", name: "KABYANJALI SAHU" },
+        { roll: "IS25-046", name: "PRIYANKA BEHERA (46)" },
+        { roll: "IS25-045", name: "PRITHVIRAJ SINGH" },
+        { roll: "IS25-029", name: "KISHOR KUMAR DAS" },
+        { roll: "IS25-051", name: "RASHMITA BHOI" },
+        { roll: "IS25-006", name: "ARPITA SENAPATI" },
+        { roll: "IS25-027", name: "JIGNYASA JENA" },
+        { roll: "IS25-019", name: "DHARMENDRA DALAI" },
+        { roll: "IS25-023", name: "HARAPRIYA SUTAR" },
+        { roll: "IS25-014", name: "DAYANIDHI BEHERA" },
+        { roll: "IS25-074", name: "SONALI SAHU" },
+        { roll: "IS25-078", name: "DIBYA KRISHNA PATRA" },
+        { roll: "IS25-070", name: "ADYASA ROUT" },
+        { roll: "IS25-044", name: "PREETILATA BARIK" },
+        { roll: "IS25-012", name: "CHANDAN BEHERA" },
+        { roll: "IS25-034", name: "NARESH SETHI" },
+        { roll: "IS25-056", name: "SASWAT PRITAM PUTHAL" },
+        { roll: "IS25-081", name: "BIBHU KISHORE MAJHI" },
+        { roll: "IS25-021", name: "DIBYARANJAN MALIK" },
+        { roll: "IS25-003", name: "AMIT MALLIK" },
+        { roll: "IS25-082", name: "GITARANI BEHERA" },
+        { roll: "IS25-031", name: "KUNAL SETHI" },
+        { roll: "IS25-077", name: "AMIT KUMAR BEHERA" },
+        { roll: "IS25-010", name: "BIBEK SAHOO" },
+        { roll: "IS25-075", name: "SUSANTA KUMAR BEHERA" },
+        { roll: "IS25-049", name: "RAKESH RANJAN BARIK" },
+        { roll: "IS25-037", name: "PARAMESWAR SAHOO" },
+        { roll: "IS25-013", name: "CHINMAYA KUMAR DAS" },
+        { roll: "IS25-041", name: "PRAMOD KUMAR DAS" },
+        { roll: "IS25-036", name: "PADMA LOCHAN BARIK" },
+        { roll: "IS25-075_2", name: "SUMANTA KU BEHERA", displayRoll: "IS25-075" },
+        { roll: "IS25-035", name: "OM PRAKASHA BISWAL" },
+        { roll: "IS25-040", name: "PRAMOD BARIK" },
+        { roll: "IS25-057", name: "SHASHI BHUSAN PRUSTY" },
+        { roll: "IS25-063", name: "SUBHAM HATI" },
+        { roll: "IS25-060", name: "SMRUTISANGITA BEHERA" },
+        { roll: "IS25-038", name: "PAYAL MISHRA" },
+        { roll: "IS25-080", name: "BHABESH KUMAR SAHU" },
+        { roll: "IS25-073", name: "SATYABRATA MOHANTY" },
+        { roll: "IS25-058", name: "SHIBA SHANKAR SETHI" },
+        { roll: "IS25-002", name: "AMIT KUMAR ROUT" },
+        { roll: "IS25-055", name: "RUPALI MALLICK" },
+        { roll: "IS25-016", name: "DEBALAXMI MALLICK" },
+        { roll: "IS25-020", name: "DHARMENDRA BEHERA" },
+        { roll: "IS25-005", name: "Arpita Behera" },
+        { roll: "IS25-072", name: "NIRANJAN MALIK" },
+        { roll: "IS25-052", name: "RASMIRANJAN SWAIN" },
+        { roll: "IS25-079", name: "MIRJA KHALID RAZA BEG" },
+        { roll: "IS25-009", name: "BARSHARANI DALEI" },
+        { roll: "IS25-048", name: "PRIYANKA BEHERA (48)" },
+        { roll: "IS25-032", name: "MANORANJAN BEHERA" },
+        { roll: "IS25-001", name: "ADARSHA DALEI" }
+      ]
+    };
+
+    // ---------- State ----------
+    let currentSubject = "Chemistry";
+    let currentTeacher = "";
+    let currentGroup = "Group A";
+    let currentSession = null;
+    let editing = false;
+    let studentViewMode = "card"; // "card" or "list"
+    let currentCardIndex = 0;
+    let selectedStudents = new Set();
+    let selectionSessionKey = "";
+    let listSearch = "";   // search query for the Full List View
+
+    const DB_KEY = "practicePortalDB_v5";
+    const DIRTY_KEY = "practicePortalDirty_v5";
+
+    let appDialogCallback = null;
+    function showNotice(message, title = "Notice") {
+      appDialogCallback = null;
+      document.getElementById("appDialogTitle").textContent = title;
+      document.getElementById("appDialogBody").textContent = message;
+      document.getElementById("appDialogCancelBtn").classList.add("hidden");
+      const okBtn = document.getElementById("appDialogOkBtn");
+      okBtn.textContent = "OK";
+      okBtn.className = "px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white";
+      document.getElementById("appDialogModal").classList.remove("hidden");
+    }
+    function showConfirmDialog(message, onConfirm, title = "Confirm Action") {
+      appDialogCallback = onConfirm;
+      document.getElementById("appDialogTitle").textContent = title;
+      document.getElementById("appDialogBody").textContent = message;
+      document.getElementById("appDialogCancelBtn").classList.remove("hidden");
+      const okBtn = document.getElementById("appDialogOkBtn");
+      okBtn.textContent = "Confirm";
+      okBtn.className = "px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-bold text-white";
+      document.getElementById("appDialogModal").classList.remove("hidden");
+    }
+    function closeAppDialog(confirmed) {
+      document.getElementById("appDialogModal").classList.add("hidden");
+      const cb = appDialogCallback;
+      appDialogCallback = null;
+      if (confirmed && typeof cb === "function") cb();
+    }
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function fmtDate(iso) {
+      const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const [y, mo, d] = String(iso).split("-");
+      return `${parseInt(d, 10)} ${m[parseInt(mo, 10) - 1]} ${y}`;
+    }
+    function safeId(s) { return String(s).replace(/[^A-Za-z0-9]/g, "-"); }
+
+    function todayLocal() {
+      const d = new Date(), p = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    }
+
+    let db = {};
+    let dirty = new Set();
+    let epochs = {};   // per-subject "data was reset at" times, so every device wipes old data
+    const EPOCH_KEY = "practicePortalEpochs_v5";
+    function saveEpochs() { try { localStorage.setItem(EPOCH_KEY, JSON.stringify(epochs)); } catch (e) {} }
+
+    function loadLocal() {
+      try { db = JSON.parse(localStorage.getItem(DB_KEY)) || {}; } catch (e) { db = {}; }
+      try { dirty = new Set(JSON.parse(localStorage.getItem(DIRTY_KEY)) || []); } catch (e) { dirty = new Set(); }
+      try { epochs = JSON.parse(localStorage.getItem(EPOCH_KEY)) || {}; } catch (e) { epochs = {}; }
+    }
+    function persistLocal() {
+      try {
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+        localStorage.setItem(DIRTY_KEY, JSON.stringify([...dirty]));
+        return true;
+      } catch (e) {
+        lastError = "The browser could not save local data. Check available site storage before continuing.";
+        setSync("Storage issue", "bg-rose-200 text-rose-900");
+        return false;
+      }
+    }
+
+    function commit(session) {
+      // Use a strictly increasing timestamp so two rapid edits are not treated as the same version.
+      const previousVersion = Number((db[session.key] || {}).updatedAt) || 0;
+      session.updatedAt = Math.max(Date.now(), previousVersion + 1);
+      session.teacher = currentTeacher || session.teacher || "";
+      db[session.key] = session;
+      dirty.add(session.key);
+      persistLocal();
+      renderHomeGraphs();
+
+      // If a full sync is already running, its push phase will include this change.
+      // Otherwise start/continue the single serialized upload queue.
+      if (!syncing) void pushDirty();
+    }
+
+    let syncing = false;
+    let pushPromise = null;
+    let lastError = "";
+    function setSync(text, cls) {
+      const b = document.getElementById("syncBadge");
+      if (!b) return;
+      b.textContent = text;
+      b.className = "text-xs px-2.5 py-1 rounded-full font-semibold " + cls;
+    }
+    const syncEnabled = () => !!CONFIG.SYNC_URL;
+
+    async function pullRemote() {
+      const url = `${CONFIG.SYNC_URL}?action=list&token=${encodeURIComponent(CONFIG.SYNC_TOKEN)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Cloud download failed (HTTP ${res.status}).`);
+
+      let data;
+      try { data = await res.json(); }
+      catch (e) { throw new Error("The URL did not return valid JSON. Check SYNC_URL and the Apps Script response."); }
+      if (!data || !data.ok) throw new Error((data && data.error) || "Cloud download failed.");
+      if (!Array.isArray(data.sessions)) throw new Error("The cloud response is missing its sessions list.");
+
+      const changedKeys = [];
+
+      // A reset was done on another device: remove older local data for that subject
+      const remoteEpochs = (data.epochs && typeof data.epochs === "object") ? data.epochs : {};
+      Object.keys(remoteEpochs).forEach(subj => {
+        const ep = Number(remoteEpochs[subj]) || 0;
+        if (ep > (Number(epochs[subj]) || 0)) {
+          Object.keys(db).forEach(k => {
+            if (db[k].subject === subj && (Number(db[k].updatedAt) || 0) < ep) {
+              delete db[k]; dirty.delete(k); changedKeys.push(k);
+            }
+          });
+          epochs[subj] = ep;
+        }
+      });
+      saveEpochs();
+
+      data.sessions.forEach(remoteSession => {
+        if (!remoteSession || typeof remoteSession.key !== "string") return;
+
+        // Never replace a local session that still has unsent changes.
+        if (dirty.has(remoteSession.key)) return;
+
+        const local = db[remoteSession.key];
+        if (!local || (Number(remoteSession.updatedAt) || 0) > (Number(local.updatedAt) || 0)) {
+          db[remoteSession.key] = remoteSession;
+          changedKeys.push(remoteSession.key);
+        }
+      });
+
+      persistLocal();
+      return changedKeys;
+    }
+
+    function pushDirty() {
+      if (!syncEnabled()) return Promise.resolve(true);
+      if (pushPromise) return pushPromise;
+
+      pushPromise = (async () => {
+        if (!dirty.size) return true;
+        setSync("Saving…", "bg-amber-200 text-amber-900");
+
+        try {
+          // Keep looping because a session may be edited while its previous version uploads.
+          while (dirty.size) {
+            const keys = [...dirty];
+            for (const key of keys) {
+              if (!dirty.has(key)) continue;
+              const current = db[key];
+              if (!current) {
+                dirty.delete(key);
+                continue;
+              }
+
+              // Send a snapshot. Do not clear dirty if a newer edit appears in the meantime.
+              const snapshot = JSON.parse(JSON.stringify(current));
+              const res = await fetch(CONFIG.SYNC_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "save", token: CONFIG.SYNC_TOKEN, session: snapshot })
+              });
+              if (!res.ok) throw new Error(`Cloud save failed (HTTP ${res.status}).`);
+
+              let data;
+              try { data = await res.json(); }
+              catch (e) { throw new Error("The cloud save response was not valid JSON."); }
+              if (!data || !data.ok) throw new Error((data && data.error) || "Cloud save failed.");
+
+              const latest = db[key];
+              if (latest && latest.updatedAt === snapshot.updatedAt) dirty.delete(key);
+            }
+            persistLocal();
+          }
+
+          setSync("☁ Saved", "bg-emerald-200 text-emerald-900");
+          return true;
+        } catch (e) {
+          lastError = e.message || String(e);
+          persistLocal();
+          setSync("Offline – tap for reason", "bg-rose-200 text-rose-900");
+          return false;
+        }
+      })().finally(() => {
+        pushPromise = null;
+      });
+
+      return pushPromise;
+    }
+
+    async function syncNow(ev) {
+      if (ev && ev.type === "click" && lastError) {
+        showNotice("Last problem:\n\n" + lastError, "Sync Problem");
+      }
+      if (!syncEnabled() || syncing) return;
+
+      syncing = true;
+      setSync("Syncing…", "bg-amber-200 text-amber-900");
+      let changedKeys = [];
+      let pullError = "";
+
+      try {
+        try {
+          changedKeys = await pullRemote();
+        } catch (e) {
+          pullError = e.message || String(e);
+        }
+
+        // Push local edits even if downloading failed; local work should still be sent when possible.
+        const pushSucceeded = await pushDirty();
+        if (pullError) {
+          lastError = pullError;
+          setSync("Offline – tap for reason", "bg-rose-200 text-rose-900");
+        } else if (pushSucceeded && !dirty.size) {
+          lastError = "";
+          setSync("☁ Synced", "bg-emerald-200 text-emerald-900");
+        }
+
+        renderHomeGraphs();
+        if (!document.getElementById("screenGroup").classList.contains("hidden")) updateGroupBadges();
+
+        // Refresh the visible session only when the server actually changed that session.
+        // This avoids clearing a topic that the teacher is currently typing.
+        if (
+          !document.getElementById("screenAttendance").classList.contains("hidden") &&
+          !editing && currentSession && changedKeys.includes(currentSession.key)
+        ) {
+          const topicInput = document.getElementById("sessionTopic");
+          const topicWasFocused = document.activeElement === topicInput;
+          const topicDraft = topicInput.value;
+          loadDateSession();
+          // Keep an in-progress topic draft while still refreshing the session records.
+          if (topicWasFocused) topicInput.value = topicDraft;
+        }
+      } catch (e) {
+        lastError = e.message || String(e);
+        setSync("Offline – tap for reason", "bg-rose-200 text-rose-900");
+      } finally {
+        syncing = false;
+        if (dirty.size && !pushPromise) void pushDirty();
+      }
+    }
+
+    window.addEventListener("online", syncNow);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) syncNow(); });
+
+    // ---------- Site-Wide Password Protection ----------
+    const SITE_UNLOCK_KEY = "practicePortalSiteUnlocked_v1";
+
+    // Compact pure-JS SHA-256 fallback (works even if opened from file:// where crypto.subtle is restricted)
+    function sha256Fallback(ascii) {
+      const rightRotate = (value, amount) => (value >>> amount) | (value << (32 - amount));
+      const mathPow = Math.pow;
+      const maxWord = mathPow(2, 32);
+      let result = "";
+      const words = [];
+      const asciiBitLength = ascii.length * 8;
+      const hash = [];
+      const k = [];
+      let primeCounter = 0;
+      const isComposite = {};
+      for (let candidate = 2; primeCounter < 64; candidate++) {
+        if (!isComposite[candidate]) {
+          for (let i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+          hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+          k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+        }
+      }
+      ascii += "\x80";
+      while (ascii.length % 64 - 56) ascii += "\x00";
+      for (let i = 0; i < ascii.length; i++) {
+        const j = ascii.charCodeAt(i);
+        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+      }
+      words[words.length] = ((asciiBitLength / maxWord) | 0);
+      words[words.length] = (asciiBitLength);
+      for (let j = 0; j < words.length;) {
+        const w = words.slice(j, j += 16);
+        const oldHash = hash.slice(0);
+        for (let i = 0; i < 64; i++) {
+          const w15 = w[i - 15], w2 = w[i - 2];
+          const a = hash[0], e = hash[4];
+          const temp1 = hash[7]
+            + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+            + ((e & hash[5]) ^ ((~e) & hash[6]))
+            + k[i]
+            + (w[i] = (i < 16) ? w[i] : (
+              w[i - 16]
+              + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+              + w[i - 7]
+              + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+            ) | 0);
+          const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+            + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+          hash.unshift((temp1 + temp2) | 0);
+          hash[4] = (hash[4] + temp1) | 0;
+          hash.pop();
+        }
+        for (let i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+      }
+      for (let i = 0; i < 8; i++) {
+        for (let j = 3; j + 1; j--) {
+          const b = (hash[i] >> (j * 8)) & 255;
+          result += ((b < 16) ? "0" : "") + b.toString(16);
+        }
+      }
+      return result;
+    }
+
+    async function hashPassword(text) {
+      const normalized = String(text || "");
+      if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+        try {
+          const buf = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalized));
+          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        } catch (e) {}
+      }
+      return sha256Fallback(unescape(encodeURIComponent(normalized)));
+    }
+
+    function revealPortal() {
+      document.getElementById("siteLockScreen").classList.add("hidden");
+      document.getElementById("appHeader").classList.remove("hidden");
+      document.getElementById("appMain").classList.remove("hidden");
+      loadLocal();
+      document.getElementById("sessionDate").value = todayLocal();
+      renderHomeGraphs();
+      if (syncEnabled()) syncNow();
+    }
+
+    function toggleSitePasswordVisibility() {
+      const input = document.getElementById("sitePasswordInput");
+      const btn = document.getElementById("toggleSitePwBtn");
+      if (!input || !btn) return;
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      btn.textContent = showing ? "Show" : "Hide";
+    }
+
+    async function unlockSite() {
+      const input = document.getElementById("sitePasswordInput");
+      const err = document.getElementById("siteLockError");
+      const remember = document.getElementById("rememberSiteUnlock");
+      const entered = input ? input.value : "";
+      const digest = await hashPassword(entered);
+      if (digest !== CONFIG.SITE_PASSWORD_HASH) {
+        err.classList.remove("hidden");
+        if (input) { input.focus(); input.select(); }
+        return;
+      }
+      err.classList.add("hidden");
+      if (input) input.value = "";
+      if (remember && remember.checked) {
+        try { sessionStorage.setItem(SITE_UNLOCK_KEY, CONFIG.SITE_PASSWORD_HASH); } catch (e) {}
+      }
+      revealPortal();
+    }
+
+    function lockSite() {
+      try { sessionStorage.removeItem(SITE_UNLOCK_KEY); } catch (e) {}
+      document.getElementById("appHeader").classList.add("hidden");
+      document.getElementById("appMain").classList.add("hidden");
+      document.getElementById("siteLockScreen").classList.remove("hidden");
+      document.getElementById("siteLockError").classList.add("hidden");
+      const input = document.getElementById("sitePasswordInput");
+      if (input) { input.value = ""; input.focus(); }
+    }
+
+    window.onload = () => {
+      let alreadyUnlocked = false;
+      try {
+        alreadyUnlocked = sessionStorage.getItem(SITE_UNLOCK_KEY) === CONFIG.SITE_PASSWORD_HASH;
+      } catch (e) {}
+      if (alreadyUnlocked) {
+        revealPortal();
+      } else {
+        const input = document.getElementById("sitePasswordInput");
+        if (input) input.focus();
+      }
+    };
+
+    function submittedSessions(subj, grp) {
+      return Object.values(db).filter(s => s.subject === subj && s.group === grp && s.submitted);
+    }
+
+    function renderHomeGraphs() {
+      const container = document.getElementById("graphContainer");
+      const combos = [
+        { subj: "Chemistry", grp: "Group A" }, { subj: "Chemistry", grp: "Group B" },
+        { subj: "Physics", grp: "Group A" },   { subj: "Physics", grp: "Group B" }
+      ];
+      container.innerHTML = combos.map(c => {
+        let done = 0, pending = 0, absent = 0, total = 0;
+        submittedSessions(c.subj, c.grp).forEach(s => {
+          Object.values(s.records || {}).forEach(r => {
+            total++;
+            if (r.status === "Done") done++;
+            else if (r.status === "Pending") pending++;
+            else if (r.status === "Absent") absent++;
+          });
+        });
+        const donePct = total ? Math.round((done / total) * 100) : 0;
+        const pendPct = total ? Math.round((pending / total) * 100) : 0;
+        const absPct = total ? Math.round((absent / total) * 100) : 0;
+        return `
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-semibold">
+              <span>${c.subj} &bull; ${c.grp}</span>
+              <span class="text-slate-600">Done: ${done} (${donePct}%) | Pending: ${pending} | Absent: ${absent}</span>
+            </div>
+            <div class="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden flex">
+              <div style="width:${donePct}%" class="bg-emerald-500 h-full" title="Done"></div>
+              <div style="width:${pendPct}%" class="bg-amber-400 h-full" title="Pending"></div>
+              <div style="width:${absPct}%" class="bg-rose-500 h-full" title="Absent"></div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function handleLogin() {
+      const subj = document.getElementById("subjectSelect").value;
+      const tName = document.getElementById("teacherNameInput").value.trim();
+      const code = document.getElementById("teacherCodeInput").value.trim();
+      if (!tName || code !== CONFIG.TEACHER_CODE) {
+        document.getElementById("loginError").classList.remove("hidden");
+        return;
+      }
+      document.getElementById("loginError").classList.add("hidden");
+      currentSubject = subj;
+      currentTeacher = tName;
+      document.getElementById("screenHome").classList.add("hidden");
+      document.getElementById("screenGroup").classList.remove("hidden");
+      document.getElementById("homeBtn").classList.remove("hidden");
+      document.getElementById("groupGreeting").innerText = `${currentSubject} Portal — Welcome, ${currentTeacher}`;
+      updateGroupBadges();
+    }
+
+    function updateGroupBadges() {
+      ["Group A", "Group B"].forEach(grp => {
+        const sfx = grp === "Group A" ? "A" : "B";
+        const list = Object.values(pendingByStudent(currentSubject, grp, "9999-12-31"));
+        const items = list.reduce((n, e) => n + e.count, 0);
+        const alerts = list.filter(e => e.count >= CONFIG.ALERT_AFTER).length;
+        document.getElementById("badgeGroup" + sfx).innerText = `${items} Unfinished`;
+        document.getElementById("metaGroup" + sfx).innerText =
+          `${rosters[grp].length} Students • ${list.length} with pending` +
+          (alerts ? ` • ${alerts} at ${CONFIG.ALERT_AFTER}+` : "") + " • Click to manage";
+      });
+    }
+
+    // ---------- New batch: backup + delete ----------
+    function toggleResetPanel() {
+      document.getElementById("resetPanel").classList.toggle("hidden");
+      document.getElementById("resetScopeThis").textContent = `Only ${currentSubject} (Group A + Group B)`;
+      document.getElementById("resetMsg").textContent = "";
+    }
+
+    function buildBackupCsv(subjects) {
+      const q = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+      const rows = [["Subject", "Group", "Date", "Topic", "Submitted", "Roll", "Name", "Status", "Next assigned", "Teacher"]];
+      Object.values(db)
+        .filter(s => subjects.includes(s.subject))
+        .sort((a, b) => (a.subject + a.group + a.date).localeCompare(b.subject + b.group + b.date))
+        .forEach(s => {
+          (rosters[s.group] || []).forEach(stu => {
+            const r = (s.records || {})[stu.roll];
+            if (!r) return;
+            rows.push([s.subject, s.group, s.date, s.topic || "", s.submitted ? "Yes" : "No",
+                       stu.displayRoll || stu.roll, stu.name, r.status, r.assignedNext || "", s.teacher || ""]);
+          });
+        });
+      return "\ufeff" + rows.map(r => r.map(q).join(",")).join("\r\n");
+    }
+
+    function downloadBackup(subjects) {
+      const blob = new Blob([buildBackupCsv(subjects)], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `practice-backup-${todayLocal()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }
+
+    async function runReset() {
+      const msg = document.getElementById("resetMsg");
+      const btn = document.getElementById("resetBtn");
+      const scope = document.getElementById("resetScope").value;
+      const subjects = scope === "ALL" ? ["Chemistry", "Physics"] : [currentSubject];
+
+      if (document.getElementById("resetConfirm").value.trim() !== "RESET") {
+        msg.className = "text-xs font-semibold text-red-600";
+        msg.textContent = "Type RESET (capital letters) in the box to confirm.";
+        return;
+      }
+      btn.disabled = true;
+      msg.className = "text-xs font-semibold text-slate-700";
+      msg.textContent = "Working…";
+
+      const hasData = Object.values(db).some(s => subjects.includes(s.subject));
+      if (document.getElementById("resetBackup").checked && hasData) downloadBackup(subjects);
+
+      const r = await performReset(scope, subjects);
+      if (!r.ok) {
+        msg.className = "text-xs font-semibold text-red-600";
+        msg.textContent = "Nothing was deleted. " + r.error;
+        btn.disabled = false;
+        return;
+      }
+      document.getElementById("resetConfirm").value = "";
+      msg.className = "text-xs font-semibold text-emerald-700";
+      msg.textContent = `Done. ${subjects.join(" & ")} data deleted${syncEnabled() ? " from the Google Sheet and this device (other devices clear on their next sync)" : " from this device"}.`;
+      btn.disabled = false;
+    }
+
+    // Shared by "Delete data permanently" and "Delete All Attendance".
+    // Cloud first: if the Google Sheet can't be cleared, nothing is deleted anywhere,
+    // otherwise the next sync would bring the old data straight back.
+    async function performReset(scope, subjects) {
+      let serverEpochs = {};
+      if (syncEnabled()) {
+        try {
+          if (pushPromise) await pushPromise;
+          const res = await fetch(CONFIG.SYNC_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "reset", token: CONFIG.SYNC_TOKEN, subject: scope === "ALL" ? "ALL" : currentSubject })
+          });
+          if (!res.ok) throw new Error(`Cloud request failed (HTTP ${res.status}).`);
+          const data = await res.json();
+          if (!data || !data.ok) {
+            throw new Error(data && data.error === "no session"
+              ? "Your Google Apps Script is the old version. Paste the new Code.gs, then Deploy > Manage deployments > pencil > New version."
+              : ((data && data.error) || "Cloud reset failed."));
+          }
+          serverEpochs = data.epochs || {};
+        } catch (e) {
+          return { ok: false, error: e.message || String(e) };
+        }
+      }
+
+      let removed = 0;
+      Object.keys(db).forEach(k => {
+        if (subjects.includes(db[k].subject)) { delete db[k]; dirty.delete(k); removed++; }
+      });
+      subjects.forEach(s => { epochs[s] = Number(serverEpochs[s]) || Date.now(); });
+      saveEpochs();
+      persistLocal();
+
+      currentSession = null;
+      renderHomeGraphs();
+      updateGroupBadges();
+      return { ok: true, removed };
+    }
+
+    // Delete every attendance/session record (topics, statuses, pending lists) across
+    // ALL subjects and groups. Student names and group definitions are untouched.
+    function deleteAllAttendance() {
+      showConfirmDialog(
+        "Delete ALL attendance data for every subject and group?\n\nThis removes every recorded session, topic, status and pending count across the whole app. Student names and groups are NOT affected. This cannot be undone.",
+        async () => {
+          const r = await performReset("ALL", ["Chemistry", "Physics"]);
+          if (!r.ok) {
+            showNotice("Nothing was deleted. " + r.error, "Delete Failed");
+            return;
+          }
+          loadDateSession();
+          showNotice(`Deleted ${r.removed} session(s) across all subjects and groups${syncEnabled() ? ", including the Google Sheet" : ""}. Student names and groups are preserved.`, "Attendance Deleted");
+        },
+        "Delete All Attendance"
+      );
+    }
+
+    function selectGroup(grp) {
+      currentGroup = grp;
+      currentCardIndex = 0;
+      listSearch = "";
+      document.getElementById("screenGroup").classList.add("hidden");
+      document.getElementById("screenAttendance").classList.remove("hidden");
+      document.getElementById("activeContextBadge").innerText = `${currentSubject} • ${currentGroup} • ${currentTeacher}`;
+      loadDateSession();
+    }
+    function backToGroups() {
+      document.getElementById("screenAttendance").classList.add("hidden");
+      document.getElementById("screenGroup").classList.remove("hidden");
+      updateGroupBadges();
+    }
+    function goHome() {
+      document.getElementById("screenGroup").classList.add("hidden");
+      document.getElementById("screenAttendance").classList.add("hidden");
+      document.getElementById("screenHome").classList.remove("hidden");
+      document.getElementById("homeBtn").classList.add("hidden");
+      renderHomeGraphs();
+    }
+
+    function getSessionKey() {
+      return `${currentSubject}_${currentGroup}_${document.getElementById("sessionDate").value}`;
+    }
+
+    function loadDateSession() {
+      const key = getSessionKey();
+      if (selectionSessionKey !== key) {
+        selectedStudents.clear();
+        currentCardIndex = 0;      // new date/group -> Card View starts again from the first student
+        selectionSessionKey = key;
+      }
+      editing = false;
+      if (db[key]) {
+        currentSession = db[key];
+      } else {
+        const recs = {};
+        rosters[currentGroup].forEach(s => { recs[s.roll] = { status: "Pending", assignedNext: "" }; });
+        currentSession = {
+          key, subject: currentSubject, group: currentGroup,
+          date: document.getElementById("sessionDate").value,
+          topic: "", submitted: false, records: recs
+        };
+      }
+      // Normalize older/incomplete saved sessions before rendering or editing them.
+      if (!currentSession.records || typeof currentSession.records !== "object") {
+        currentSession.records = {};
+      }
+      rosters[currentGroup].forEach(s => {
+        if (!currentSession.records[s.roll]) {
+          currentSession.records[s.roll] = { status: "Pending", assignedNext: "" };
+        }
+      });
+
+      document.getElementById("sessionTopic").value = currentSession.topic || "";
+      renderCarryForward();
+      renderStudentRollCall();
+    }
+
+    function isLocked() { return currentSession.submitted && !editing; }
+
+    function startOrLoadTopic() {
+      if (isLocked()) return;
+      currentSession.topic = document.getElementById("sessionTopic").value.trim();
+      commit(currentSession);
+      renderStudentRollCall();
+    }
+
+    function setStudentViewMode(mode) {
+      studentViewMode = mode;
+      renderStudentRollCall();
+    }
+
+    function changeCard(dir) {
+      const list = rosters[currentGroup];
+      currentCardIndex += dir;
+      if (currentCardIndex < 0) currentCardIndex = 0;
+      if (currentCardIndex >= list.length) currentCardIndex = list.length - 1;
+      renderStudentRollCall();
+    }
+
+    // ---------- Pending count per student ----------
+    // Every submitted day on which a student is Pending/Absent adds +1 to that student's count.
+    // The count drops only when the teacher clears that practice ("Mark Done").
+    function daysBetween(fromISO, toISO) {
+      const [y1, m1, d1] = fromISO.split("-").map(Number);
+      const [y2, m2, d2] = toISO.split("-").map(Number);
+      return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000);
+    }
+
+    function pendingItemsBefore(subj, grp, beforeDate) {
+      const items = [];
+      submittedSessions(subj, grp)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .forEach(sess => {
+          if (sess.date >= beforeDate) return;
+          (rosters[grp] || []).forEach(stu => {
+            const rec = (sess.records || {})[stu.roll];
+            if (rec && (rec.status === "Pending" || rec.status === "Absent")) {
+              items.push({ key: sess.key, date: sess.date, topic: sess.topic || "Untitled Topic",
+                           roll: stu.roll, displayRoll: stu.displayRoll || stu.roll, name: stu.name, status: rec.status });
+            }
+          });
+        });
+      return items;
+    }
+
+    function pendingByStudent(subj, grp, beforeDate) {
+      const map = {};
+      pendingItemsBefore(subj, grp, beforeDate).forEach(it => {
+        const e = map[it.roll] || (map[it.roll] = {
+          roll: it.roll, displayRoll: it.displayRoll, name: it.name,
+          count: 0, pending: 0, absent: 0, oldest: it.date, items: []
+        });
+        e.count++;
+        if (it.status === "Absent") e.absent++; else e.pending++;
+        e.items.push(it);               // items arrive oldest-first
+      });
+      return map;
+    }
+
+    function levelClass(n) {
+      if (n >= CONFIG.ALERT_AFTER) return "bg-red-600 text-white";
+      if (n === 2) return "bg-orange-200 text-orange-900";
+      return "bg-amber-100 text-amber-800";
+    }
+
+    let prevPending = {};   // set whenever the roll call is drawn
+    function pcBadge(roll) {
+      const e = prevPending[roll];
+      if (!e) return "";
+      return `<span class="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full ${levelClass(e.count)}">&#9888; ${e.count} earlier pending</span>`;
+    }
+
+    function renderCarryForward() {
+      const selectedDate = document.getElementById("sessionDate").value;
+      const listEl = document.getElementById("carryForwardList");
+      const countEl = document.getElementById("carryCount");
+      const sumEl = document.getElementById("carrySummary");
+
+      const students = Object.values(pendingByStudent(currentSubject, currentGroup, selectedDate))
+        .sort((a, b) => b.count - a.count || a.oldest.localeCompare(b.oldest));   // worst first
+      const total = students.reduce((n, e) => n + e.count, 0);
+
+      if (!students.length) {
+        countEl.textContent = "All clear";
+        countEl.className = "shrink-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full";
+        sumEl.textContent = "";
+        listEl.innerHTML = `<p class="text-xs text-emerald-700 font-medium">All previous dates are 100% cleared for ${esc(currentGroup)}!</p>`;
+        return;
+      }
+      const alerts = students.filter(e => e.count >= CONFIG.ALERT_AFTER).length;
+      countEl.textContent = `${total} Unfinished`;
+      countEl.className = "shrink-0 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full";
+      sumEl.textContent = `${students.length} student${students.length > 1 ? "s" : ""} pending` +
+        (alerts ? ` • ${alerts} with ${CONFIG.ALERT_AFTER}+ missed` : "");
+
+      listEl.innerHTML = students.map(s => {
+        const hot = s.count >= CONFIG.ALERT_AFTER;
+        const oldestDays = daysBetween(s.oldest, selectedDate);
+        const rows = s.items.map(it => {
+          const d = daysBetween(it.date, selectedDate);
+          return `
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2">
+              <div class="min-w-0">
+                <span class="inline-block text-xs px-2.5 py-0.5 rounded-full font-bold ${it.status === 'Absent' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}">${it.status} on ${esc(fmtDate(it.date))}</span>
+                <span class="text-xs text-slate-500 ml-1">${d} day${d === 1 ? "" : "s"} ago</span>
+                <p class="text-sm text-slate-600 mt-0.5">Missed: <strong class="text-slate-900">${esc(it.topic)}</strong></p>
+              </div>
+              <button onclick="markPreviousCleared('${it.key}', '${it.roll}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg shrink-0">&#10003; Cleared</button>
+            </div>`;
+        }).join("");
+
+        return `
+          <div class="bg-white p-4 rounded-2xl border ${hot ? "border-red-300" : "border-amber-200"} space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="bg-slate-900 text-white text-xs font-bold px-2.5 py-1 rounded-lg font-mono">${esc(s.displayRoll)}</span>
+                <span class="text-base font-bold text-slate-800">${esc(s.name)}</span>
+              </div>
+              <span class="text-xs font-bold px-3 py-1 rounded-full ${levelClass(s.count)}">${hot ? "&#9888; " : ""}${s.count} pending</span>
+            </div>
+            <p class="text-xs text-slate-500">${s.pending} Pending${s.absent ? ` &bull; ${s.absent} Absent` : ""} &bull; oldest is ${oldestDays} day${oldestDays === 1 ? "" : "s"} old (${esc(fmtDate(s.oldest))})</p>
+            <div class="space-y-2">${rows}</div>
+            <input id="nextQ_${safeId(s.roll)}" type="text" placeholder="Next topic to assign..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+            ${s.count > 1 ? `<button onclick="markAllCleared('${s.roll}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 rounded-xl">&#10003; Mark all ${s.count} cleared &amp; assign next</button>` : ""}
+          </div>`;
+      }).join("");
+    }
+
+    // Saves the "next topic" on today's sheet for this student (works even if today is already locked)
+    function assignNext(roll) {
+      const input = document.getElementById(`nextQ_${safeId(roll)}`);
+      const typed = input ? input.value.trim() : "";
+      if (!currentSession.records[roll]) currentSession.records[roll] = { status: "Pending", assignedNext: "" };
+      const rec = currentSession.records[roll];
+      if (typed) rec.assignedNext = typed;
+      else if (!rec.assignedNext) rec.assignedNext = currentSession.topic ? `Assigned: ${currentSession.topic}` : "Next Topic Assigned";
+      commit(currentSession);
+    }
+
+    function clearOne(oldKey, roll) {
+      const old = db[oldKey];
+      if (!old) return;
+      if (!old.records || typeof old.records !== "object") old.records = {};
+      if (!old.records[roll]) old.records[roll] = { status: "Pending", assignedNext: "" };
+      old.records[roll].status = "Done";
+      commit(old);
+    }
+
+    function markPreviousCleared(oldKey, roll) {
+      assignNext(roll);            // read the typed topic first, before the list redraws
+      clearOne(oldKey, roll);
+      renderCarryForward();
+      renderStudentRollCall();
+    }
+
+    function markAllCleared(roll) {
+      assignNext(roll);
+      pendingItemsBefore(currentSubject, currentGroup, document.getElementById("sessionDate").value)
+        .filter(it => it.roll === roll)
+        .forEach(it => clearOne(it.key, roll));
+      renderCarryForward();
+      renderStudentRollCall();
+    }
+
+    function renderProgress() {
+      const recs = rosters[currentGroup].map(s => (currentSession.records[s.roll] || {}).status || "Pending");
+      const total = recs.length;
+      const done = recs.filter(x => x === "Done").length;
+      const pending = recs.filter(x => x === "Pending").length;
+      const absent = recs.filter(x => x === "Absent").length;
+      const pct = n => total ? Math.round((n / total) * 100) : 0;
+      const w = n => total ? (n / total) * 100 : 0;
+      document.getElementById("progressBox").innerHTML = `
+        <p class="text-sm font-bold text-slate-800">Session Progress (${esc(fmtDate(currentSession.date))})</p>
+        <div class="grid grid-cols-3 gap-2 mt-2 text-xs font-bold">
+          <div class="text-emerald-700">Cleared: ${done}<br><span class="font-semibold">(${pct(done)}%)</span></div>
+          <div class="text-amber-700">Remaining: ${pending}<br><span class="font-semibold">(${pct(pending)}%)</span></div>
+          <div class="text-rose-700">Absent: ${absent}<br><span class="font-semibold">(${pct(absent)}%)</span></div>
+        </div>
+        <div class="w-full h-3.5 bg-slate-200 rounded-full overflow-hidden flex mt-3">
+          <div style="width:${w(done)}%" class="bg-emerald-500 h-full transition-all"></div>
+          <div style="width:${w(pending)}%" class="bg-amber-400 h-full transition-all"></div>
+          <div style="width:${w(absent)}%" class="bg-rose-500 h-full transition-all"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">${done} of ${total} students have cleared today's practice.</p>`;
+    }
+
+    function renderStudentRollCall() {
+      const session = currentSession;
+      const locked = isLocked();
+      const container = document.getElementById("studentListContainer");
+
+      document.getElementById("currentTopicLabel").innerText = session.topic
+        ? `Date: ${fmtDate(session.date)} • Topic: ${session.topic}`
+        : `Date: ${fmtDate(session.date)} — please enter & set today's topic above`;
+
+      const chip = document.getElementById("entryChip");
+      if (locked) { chip.textContent = "Submitted"; chip.className = "text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800"; }
+      else if (editing) { chip.textContent = "Editing"; chip.className = "text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-800"; }
+      else { chip.textContent = "Open for Entry"; chip.className = "text-xs font-bold px-3 py-1.5 rounded-full bg-amber-100 text-amber-800"; }
+
+      document.getElementById("editModeBtn").classList.toggle("hidden", !locked);
+      document.getElementById("markAllBtn").classList.toggle("hidden", locked);
+      document.getElementById("finalSubmitBtn").classList.toggle("hidden", locked);
+      document.getElementById("finalSubmitBtn").innerText = editing ? "Save Changes" : "Final Submit Attendance";
+      document.getElementById("submitStatusMsg").innerText = locked
+        ? "Session submitted & locked. Click 'Edit Saved Data' if a student answers on time."
+        : (editing ? "Editing — remember to click Save Changes." : "");
+
+      // Highlight active mode buttons
+      const cardBtn = document.getElementById("modeCardBtn");
+      const listBtn = document.getElementById("modeListBtn");
+      if (studentViewMode === "card") {
+        cardBtn.className = "text-xs px-3 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition";
+        listBtn.className = "text-xs px-3 py-1.5 rounded-lg font-bold text-slate-600 hover:bg-slate-200 transition";
+      } else {
+        listBtn.className = "text-xs px-3 py-1.5 rounded-lg font-bold bg-indigo-600 text-white shadow-sm transition";
+        cardBtn.className = "text-xs px-3 py-1.5 rounded-lg font-bold text-slate-600 hover:bg-slate-200 transition";
+      }
+
+      prevPending = pendingByStudent(currentSubject, currentGroup, session.date);
+      renderProgress();
+
+      const chipCls = { Done: "bg-emerald-100 text-emerald-800", Absent: "bg-rose-100 text-rose-800", Pending: "bg-amber-100 text-amber-800" };
+      const groupList = rosters[currentGroup];
+
+      if (studentViewMode === "card") {
+        // --- CARD VIEW (Select a status, then manually move to the next student) ---
+        if (currentCardIndex >= groupList.length) currentCardIndex = groupList.length - 1;
+        const stu = groupList[currentCardIndex];
+        const rec = session.records[stu.roll] || { status: "Pending", assignedNext: "" };
+        const st = rec.status;
+
+        const btn = (target, activeBg, label) =>
+          `<button ${locked ? "disabled" : ""} onclick="setStudentStatus('${stu.roll}', '${target}')"
+             class="py-4 rounded-xl text-sm font-bold border transition ${
+               st === target ? activeBg + " text-white border-transparent shadow-md scale-[1.02]" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+             } ${locked ? "opacity-60 cursor-not-allowed" : ""}">${label}</button>`;
+
+        container.innerHTML = `
+          <div class="bg-indigo-50/50 border-2 border-indigo-100 p-6 rounded-2xl space-y-6 mt-4 shadow-sm">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">Student ${currentCardIndex + 1} of ${groupList.length}</span>
+              <span class="text-xs font-bold px-3 py-1 rounded-full ${chipCls[st]}">Status: ${st}</span>
+            </div>
+
+            <div class="text-center space-y-2 py-4">
+              <span class="inline-block px-3 py-1 rounded-xl bg-slate-900 text-white text-xs font-mono font-bold">${esc(stu.displayRoll || stu.roll)}</span>
+              <h2 class="text-2xl font-bold text-slate-900">${esc(stu.name)}</h2>
+              <p class="text-xs text-slate-500">${esc(currentGroup)}</p>
+              ${pcBadge(stu.roll)}
+              ${rec.assignedNext ? `<p class="text-xs text-indigo-600 font-medium mt-1">&#8627; Next Assigned: ${esc(rec.assignedNext)}</p>` : ""}
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              ${btn('Done', 'bg-emerald-600', '&#10003; Done')}
+              ${btn('Absent', 'bg-rose-600', '&#10005; Absent')}
+              ${btn('Pending', 'bg-amber-500', '&#8987; Pending')}
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-indigo-100">
+              <button onclick="changeCard(-1)" ${currentCardIndex === 0 ? 'disabled style="opacity:.4"' : ''} class="px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50">&larr; Previous</button>
+              <span class="text-xs font-medium text-slate-500">Select a status, then click Next</span>
+              <button onclick="changeCard(1)" ${currentCardIndex === groupList.length - 1 ? 'disabled style="opacity:.4"' : ''} class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700">Next &rarr;</button>
+            </div>
+          </div>`;
+      } else {
+        // --- FULL SCROLLABLE LIST VIEW WITH SEARCH & BULK SELECTION ---
+        const activeEl = document.activeElement;
+        const wasSearchFocused = activeEl && activeEl.id === "listSearchInput";
+        const selStart = wasSearchFocused ? activeEl.selectionStart : null;
+        const selEnd = wasSearchFocused ? activeEl.selectionEnd : null;
+
+        const filteredList = groupList.filter(listMatchesSearch);
+        const selectedCount = groupList.filter(stu => selectedStudents.has(stu.roll)).length;
+        const visibleSelectedCount = filteredList.filter(stu => selectedStudents.has(stu.roll)).length;
+        const allSelected = filteredList.length > 0 && visibleSelectedCount === filteredList.length;
+        const trimmedQuery = (listSearch || "").trim();
+        const searchHintText = trimmedQuery
+          ? `Showing ${filteredList.length} of ${groupList.length} students matching "${esc(trimmedQuery)}"`
+          : `Showing all ${groupList.length} students in ${esc(currentGroup)} — type a student name or roll number to filter`;
+
+        const rowsHtml = filteredList.length
+          ? filteredList.map(stu => {
+              const rec = session.records[stu.roll] || { status: "Pending", assignedNext: "" };
+              const st = rec.status;
+              const btn = (target, activeBg, label) =>
+                `<button ${locked ? "disabled" : ""} onclick="setStudentStatus('${stu.roll}', '${target}')"
+                   class="py-2.5 rounded-xl text-sm font-bold border transition ${
+                     st === target ? activeBg + " text-white border-transparent shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                   } ${locked ? "opacity-60 cursor-not-allowed" : ""}">${label}</button>`;
+              return `
+                <div class="py-4 space-y-3">
+                  <div class="flex items-start gap-3">
+                    <label class="inline-flex items-center gap-2 pt-1 shrink-0 cursor-pointer" title="Select ${esc(stu.name)} to mark as Done">
+                      <input type="checkbox" class="student-select-checkbox h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        value="${esc(stu.roll)}" ${selectedStudents.has(stu.roll) ? "checked" : ""} ${locked ? "disabled" : ""}
+                        onchange="toggleStudentSelection('${stu.roll}', this.checked)">
+                      <span class="sr-only">Select ${esc(stu.name)}</span>
+                    </label>
+                    <span class="px-3 py-2 shrink-0 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-700 font-mono">${esc(stu.displayRoll || stu.roll)}</span>
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-base font-bold text-slate-800">${esc(stu.name)}</span>
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${chipCls[st]}">${st}</span>
+                      </div>
+                      <p class="text-xs text-slate-500">${esc(currentGroup)}</p>
+                      ${pcBadge(stu.roll)}
+                      ${rec.assignedNext ? `<p class="text-xs text-indigo-600 font-medium mt-0.5">&#8627; Next Assigned: ${esc(rec.assignedNext)}</p>` : ""}
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
+                    ${btn('Done', 'bg-emerald-600', '&#10003; Done')}
+                    ${btn('Absent', 'bg-rose-600', '&#10005; Absent')}
+                    ${btn('Pending', 'bg-amber-500', '&#8987; Pending')}
+                  </div>
+                </div>`;
+            }).join("")
+          : `<div class="py-8 text-center space-y-2">
+               <p class="text-sm font-semibold text-slate-700">No students match "${esc(trimmedQuery)}"</p>
+               <p class="text-xs text-slate-500">Try searching by first name, surname, or roll number (e.g., IS25-022).</p>
+               <button onclick="setListSearch('')" class="mt-1 inline-flex items-center px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold">Show All Students</button>
+             </div>`;
+
+        container.innerHTML = `
+          <div class="mt-4 mb-3 rounded-xl border border-indigo-100 bg-indigo-50 p-3 space-y-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative flex-1 min-w-[200px]">
+                <input id="listSearchInput" type="text" placeholder="Search student by name or roll number..."
+                  value="${esc(listSearch)}"
+                  oninput="setListSearch(this.value)"
+                  onkeydown="if(event.key==='Escape'){event.preventDefault();setListSearch('');}"
+                  class="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">&#128270;</span>
+              </div>
+              <button id="clearListSearchBtn" onclick="setListSearch('')"
+                class="text-xs px-3 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 font-semibold ${trimmedQuery ? "" : "hidden"}">Clear</button>
+            </div>
+            <p id="listSearchHint" class="text-xs font-medium text-slate-600">${searchHintText}</p>
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-indigo-100">
+              <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <input id="selectAllStudents" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  ${allSelected ? "checked" : ""} ${locked || filteredList.length === 0 ? "disabled" : ""}
+                  onchange="toggleSelectAllStudents(this.checked)">
+                Select all students
+              </label>
+              <span id="selectedStudentCount" class="text-xs font-bold text-indigo-700">${selectedCount} selected</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="markSelectedDoneBtn" onclick="markSelectedDone()" ${locked || selectedCount === 0 ? "disabled" : ""}
+                class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl">
+                &#10003; Mark Selected as Done
+              </button>
+              <button id="clearStudentSelectionBtn" onclick="clearStudentSelection()" ${locked || selectedCount === 0 ? "disabled" : ""}
+                class="bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-300 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl">
+                Clear Selection
+              </button>
+            </div>
+            <p class="text-xs text-slate-600">Search and tick the students who completed the practice, then click <strong>Mark Selected as Done</strong>. Your selections stay saved while you search for more students.</p>
+          </div>
+          <div class="divide-y divide-slate-100 mt-2">${rowsHtml}</div>`;
+
+        updateSelectionControls();
+
+        if (wasSearchFocused) {
+          const newInput = document.getElementById("listSearchInput");
+          if (newInput) {
+            newInput.focus();
+            try {
+              if (selStart !== null && selEnd !== null) {
+                newInput.setSelectionRange(selStart, selEnd);
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
+    function updateSelectionControls() {
+      const groupList = rosters[currentGroup] || [];
+      const filteredList = groupList.filter(listMatchesSearch);
+      const selectedCount = groupList.filter(stu => selectedStudents.has(stu.roll)).length;
+      const visibleSelectedCount = filteredList.filter(stu => selectedStudents.has(stu.roll)).length;
+      const allSelected = filteredList.length > 0 && visibleSelectedCount === filteredList.length;
+      const selectAll = document.getElementById("selectAllStudents");
+      const countLabel = document.getElementById("selectedStudentCount");
+      const markButton = document.getElementById("markSelectedDoneBtn");
+      const clearButton = document.getElementById("clearStudentSelectionBtn");
+
+      if (selectAll) {
+        selectAll.checked = allSelected;
+        selectAll.indeterminate = visibleSelectedCount > 0 && !allSelected;
+        selectAll.disabled = isLocked() || filteredList.length === 0;
+      }
+      if (countLabel) countLabel.textContent = `${selectedCount} selected`;
+      if (markButton) markButton.disabled = isLocked() || selectedCount === 0;
+      if (clearButton) clearButton.disabled = isLocked() || selectedCount === 0;
+    }
+
+    function toggleStudentSelection(roll, checked) {
+      if (isLocked()) return;
+      if (checked) selectedStudents.add(roll);
+      else selectedStudents.delete(roll);
+      updateSelectionControls();
+    }
+
+    function toggleSelectAllStudents(checked) {
+      if (isLocked()) return;
+      const targetList = (rosters[currentGroup] || []).filter(listMatchesSearch);
+      targetList.forEach(stu => {
+        if (checked) selectedStudents.add(stu.roll);
+        else selectedStudents.delete(stu.roll);
+      });
+      document.querySelectorAll(".student-select-checkbox").forEach(box => {
+        box.checked = selectedStudents.has(box.value);
+      });
+      updateSelectionControls();
+    }
+
+    function clearStudentSelection() {
+      selectedStudents.clear();
+      document.querySelectorAll(".student-select-checkbox").forEach(box => { box.checked = false; });
+      updateSelectionControls();
+    }
+
+    function setListSearch(q) {
+      listSearch = String(q == null ? "" : q);
+      renderStudentRollCall();
+    }
+
+    function listMatchesSearch(stu) {
+      const q = (listSearch || "").trim().toLowerCase();
+      if (!q) return true;
+      const hay = (stu.name + " " + (stu.displayRoll || stu.roll) + " " + stu.roll).toLowerCase();
+      return q.split(/\s+/).every(token => hay.includes(token));
+    }
+
+    function markSelectedDone() {
+      if (isLocked()) return;
+      const selected = rosters[currentGroup].filter(stu => selectedStudents.has(stu.roll));
+      if (!selected.length) return;
+
+      selected.forEach(stu => {
+        if (!currentSession.records[stu.roll]) {
+          currentSession.records[stu.roll] = { status: "Pending", assignedNext: "" };
+        }
+        currentSession.records[stu.roll].status = "Done";
+      });
+
+      selectedStudents.clear();
+      commit(currentSession);
+      renderStudentRollCall();
+    }
+
+    function setStudentStatus(roll, status) {
+      if (isLocked()) return;
+      currentSession.records[roll].status = status;
+      commit(currentSession);
+      renderStudentRollCall();
+    }
+
+    function setStudentStatusAndAdvance(roll, status) {
+      if (isLocked()) return;
+      currentSession.records[roll].status = status;
+      commit(currentSession);
+      // Legacy helper retained for compatibility. Card View now uses
+      // setStudentStatus() so the teacher controls when to advance.
+      if (currentCardIndex < rosters[currentGroup].length - 1) {
+        currentCardIndex++;
+      }
+      renderStudentRollCall();
+    }
+
+    function markAllDone() {
+      if (isLocked()) return;
+      rosters[currentGroup].forEach(s => {
+        const r = currentSession.records[s.roll];
+        if (r && r.status !== "Absent") r.status = "Done";
+      });
+      commit(currentSession);
+      renderStudentRollCall();
+    }
+
+    function submitAttendance() {
+      const topicVal = document.getElementById("sessionTopic").value.trim();
+      if (!topicVal) { showNotice("Please enter Today's Practice Topic before submitting.", "Topic Required"); return; }
+      currentSession.topic = topicVal;
+      currentSession.submitted = true;
+      editing = false;
+      commit(currentSession);
+      renderCarryForward();
+      renderStudentRollCall();
+    }
+
+    function toggleEditMode() {
+      editing = true;
+      renderStudentRollCall();
+    }
+  </script>
+</body>
+</html>
