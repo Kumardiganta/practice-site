@@ -199,16 +199,27 @@
           <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-slate-600 mb-1">2. Practice Topic / Question</label>
             <div class="flex gap-2">
-              <input id="sessionTopic" type="text" placeholder="e.g., VSEPR Theory / Ohm's Law Numericals" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-              <button onclick="startOrLoadTopic()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 rounded-xl shrink-0">Set Topic</button>
+              <input id="sessionTopic" type="text" placeholder="e.g., VSEPR Theory / Ohm's Law Numericals"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();startOrLoadTopic();}"
+                class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <button id="saveTopicBtn" onclick="startOrLoadTopic()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 rounded-xl shrink-0">Set Topic</button>
             </div>
+            <p id="topicActionMsg" class="text-xs font-semibold text-emerald-600 mt-1 hidden"></p>
           </div>
         </div>
         <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
           <div id="dateTopicsBar" class="flex flex-wrap items-center gap-2"></div>
-          <button type="button" onclick="addAnotherTopic()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-3 py-1.5 rounded-xl shrink-0 transition">
-            + Add Another Topic
-          </button>
+          <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <button type="button" onclick="focusEditTopicName()" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold px-3 py-1.5 rounded-xl transition">
+              &#9998; Edit Topic Name
+            </button>
+            <button type="button" onclick="deleteCurrentTopic()" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-3 py-1.5 rounded-xl transition">
+              &#128465; Delete Topic
+            </button>
+            <button type="button" onclick="addAnotherTopic()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-3 py-1.5 rounded-xl transition">
+              + Add Another Topic
+            </button>
+          </div>
         </div>
       </div>
 
@@ -279,85 +290,85 @@
     // Full Student Rosters (Roll Numbers only)
     const rosters = {
       "Group A": [
-        { roll: "IS25-022", name: "GAYATRI PRADHAN" },
-        { roll: "IS25-061", name: "SOUMYARANJAN SAMAL" },
-        { roll: "IS25-030", name: "KRISHNA BEHERA" },
         { roll: "IS25-004", name: "ANITA RANA" },
-        { roll: "IS25-025", name: "JAGNYASENI SIAL" },
-        { roll: "IS25-066", name: "SUPRAKASH PANDA" },
-        { roll: "IS25-042", name: "PRATIVA MANJARI SIAL" },
-        { roll: "IS25-064", name: "SUBHASMITA BEHERA" },
-        { roll: "IS25-015", name: "Adyasha Panda" },
-        { roll: "IS25-068", name: "DEBAJANI CHANDA" },
-        { roll: "IS25-011", name: "SWAGATIKA JENA" },
-        { roll: "IS25-026", name: "BIJAYALAXMI PADHI" },
-        { roll: "IS25-071", name: "JAYAPRAKASH NAYAK" },
-        { roll: "IS25-008", name: "M.K. IPSITA BEHERA" },
-        { roll: "IS25-008_2", name: "BARSHA PRIYADARSHANI NAYAK", displayRoll: "IS25-008" },
-        { roll: "IS25-017", name: "DEEPTIMAYEE BEHERA" },
-        { roll: "IS25-065", name: "SUBHRASEFALI NAYAK" },
         { roll: "IS25-007", name: "AYUS DAS" },
-        { roll: "IS25-053", name: "ROHIT KUMAR BEHERA" },
+        { roll: "IS25-008", name: "BARSHA PRIYADARSHANI NAYAK" },
+        { roll: "IS25-011", name: "BIJAYALAXMI PADHI" },
+        { roll: "IS25-015", name: "DEBAJANI CHANDA" },
+        { roll: "IS25-017", name: "DEEPTIMAYEE BEHERA" },
+        { roll: "IS25-022", name: "GAYATRI PRADHAN" },
         { roll: "IS25-024", name: "HIMANSHU SIAL" },
-        { roll: "IS25-039", name: "PRAKASH KUMAR JENA" },
+        { roll: "IS25-025", name: "JAGNYASENI SIAL" },
+        { roll: "IS25-026", name: "JAYAPRAKASH NAYAK" },
+        { roll: "IS25-030", name: "KRISHNA BEHERA" },
         { roll: "IS25-033", name: "MOHIT KUMAR SAHU" },
+        { roll: "IS25-039", name: "PRAKASH KUMAR JENA" },
+        { roll: "IS25-042", name: "PRATIVA MANJARI SIAL" },
         { roll: "IS25-047", name: "PRIYANKA NAYAK" },
+        { roll: "IS25-053", name: "ROHIT KUMAR BEHERA" },
+        { roll: "IS25-059", name: "SHUBHADIP MUDULI" },
+        { roll: "IS25-061", name: "SOUMYARANJAN SAMAL" },
+        { roll: "IS25-064", name: "SUBHASMITA BEHERA" },
+        { roll: "IS25-065", name: "SUBHRASEFALI NAYAK" },
+        { roll: "IS25-066", name: "SUPRAKASH PANDA" },
         { roll: "IS25-067", name: "SUSIL KUMAR BARIK" },
-        { roll: "IS25-059", name: "SHUBHADIP MUDULI" }
+        { roll: "IS25-068", name: "SWAGATIKA JENA" },
+        { roll: "IS25-071", name: "M.K. IPSITA BEHERA" },
+        { roll: "NO_ROLL_ADYASHA", name: "Adyasha Panda", displayRoll: "No Roll" }
       ],
       "Group B": [
-        { roll: "IS25-028", name: "KABYANJALI SAHU" },
-        { roll: "IS25-046", name: "PRIYANKA BEHERA (46)" },
-        { roll: "IS25-045", name: "PRITHVIRAJ SINGH" },
-        { roll: "IS25-029", name: "KISHOR KUMAR DAS" },
-        { roll: "IS25-051", name: "RASHMITA BHOI" },
-        { roll: "IS25-006", name: "ARPITA SENAPATI" },
-        { roll: "IS25-027", name: "JIGNYASA JENA" },
-        { roll: "IS25-019", name: "DHARMENDRA DALAI" },
-        { roll: "IS25-023", name: "HARAPRIYA SUTAR" },
-        { roll: "IS25-014", name: "DAYANIDHI BEHERA" },
-        { roll: "IS25-074", name: "SONALI SAHU" },
-        { roll: "IS25-078", name: "DIBYA KRISHNA PATRA" },
-        { roll: "IS25-070", name: "ADYASA ROUT" },
-        { roll: "IS25-044", name: "PREETILATA BARIK" },
-        { roll: "IS25-012", name: "CHANDAN BEHERA" },
-        { roll: "IS25-034", name: "NARESH SETHI" },
-        { roll: "IS25-056", name: "SASWAT PRITAM PUTHAL" },
-        { roll: "IS25-081", name: "BIBHU KISHORE MAJHI" },
-        { roll: "IS25-021", name: "DIBYARANJAN MALIK" },
-        { roll: "IS25-003", name: "AMIT MALLIK" },
-        { roll: "IS25-082", name: "GITARANI BEHERA" },
-        { roll: "IS25-031", name: "KUNAL SETHI" },
-        { roll: "IS25-077", name: "AMIT KUMAR BEHERA" },
-        { roll: "IS25-010", name: "BIBEK SAHOO" },
-        { roll: "IS25-075", name: "SUSANTA KUMAR BEHERA" },
-        { roll: "IS25-049", name: "RAKESH RANJAN BARIK" },
-        { roll: "IS25-037", name: "PARAMESWAR SAHOO" },
-        { roll: "IS25-013", name: "CHINMAYA KUMAR DAS" },
-        { roll: "IS25-041", name: "PRAMOD KUMAR DAS" },
-        { roll: "IS25-036", name: "PADMA LOCHAN BARIK" },
-        { roll: "IS25-075_2", name: "SUMANTA KU BEHERA", displayRoll: "IS25-075" },
-        { roll: "IS25-035", name: "OM PRAKASHA BISWAL" },
-        { roll: "IS25-040", name: "PRAMOD BARIK" },
-        { roll: "IS25-057", name: "SHASHI BHUSAN PRUSTY" },
-        { roll: "IS25-063", name: "SUBHAM HATI" },
-        { roll: "IS25-060", name: "SMRUTISANGITA BEHERA" },
-        { roll: "IS25-038", name: "PAYAL MISHRA" },
-        { roll: "IS25-080", name: "BHABESH KUMAR SAHU" },
-        { roll: "IS25-073", name: "SATYABRATA MOHANTY" },
-        { roll: "IS25-058", name: "SHIBA SHANKAR SETHI" },
+        { roll: "IS25-001", name: "ADARSHA DALEI" },
         { roll: "IS25-002", name: "AMIT KUMAR ROUT" },
-        { roll: "IS25-055", name: "RUPALI MALLICK" },
-        { roll: "IS25-016", name: "DEBALAXMI MALLICK" },
-        { roll: "IS25-020", name: "DHARMENDRA BEHERA" },
+        { roll: "IS25-003", name: "AMIT MALLIK" },
         { roll: "IS25-005", name: "Arpita Behera" },
-        { roll: "IS25-072", name: "NIRANJAN MALIK" },
-        { roll: "IS25-052", name: "RASMIRANJAN SWAIN" },
-        { roll: "IS25-079", name: "MIRJA KHALID RAZA BEG" },
+        { roll: "IS25-006", name: "ARPITA SENAPATI" },
         { roll: "IS25-009", name: "BARSHARANI DALEI" },
-        { roll: "IS25-048", name: "PRIYANKA BEHERA (48)" },
+        { roll: "IS25-010", name: "BIBEK SAHOO" },
+        { roll: "IS25-012", name: "CHANDAN BEHERA" },
+        { roll: "IS25-013", name: "CHINMAYA KUMAR DAS" },
+        { roll: "IS25-014", name: "DAYANIDHI BEHERA" },
+        { roll: "IS25-016", name: "DEBALAXMI MALLICK" },
+        { roll: "IS25-019", name: "DHARMENDRA DALAI" },
+        { roll: "IS25-020", name: "DHARMENDRA BEHERA" },
+        { roll: "IS25-021", name: "DIBYARANJAN MALIK" },
+        { roll: "IS25-023", name: "HARAPRIYA SUTAR" },
+        { roll: "IS25-027", name: "JIGNYASA JENA" },
+        { roll: "IS25-028", name: "KABYANJALI SAHU" },
+        { roll: "IS25-029", name: "KISHOR KUMAR DAS" },
+        { roll: "IS25-031", name: "KUNAL SETHI" },
         { roll: "IS25-032", name: "MANORANJAN BEHERA" },
-        { roll: "IS25-001", name: "ADARSHA DALEI" }
+        { roll: "IS25-034", name: "NARESH SETHI" },
+        { roll: "IS25-035", name: "OM PRAKASHA BISWAL" },
+        { roll: "IS25-036", name: "PADMA LOCHAN BARIK" },
+        { roll: "IS25-037", name: "PARAMESWAR SAHOO" },
+        { roll: "IS25-038", name: "PAYAL MISHRA" },
+        { roll: "IS25-040", name: "PRAMOD BARIK" },
+        { roll: "IS25-041", name: "PRAMOD KUMAR DAS" },
+        { roll: "IS25-044", name: "PREETILATA BARIK" },
+        { roll: "IS25-045", name: "PRITHVIRAJ SINGH" },
+        { roll: "IS25-046", name: "PRIYANKA BEHERA (46)" },
+        { roll: "IS25-048", name: "PRIYANKA BEHERA (48)" },
+        { roll: "IS25-049", name: "RAKESH RANJAN BARIK" },
+        { roll: "IS25-051", name: "RASHMITA BHOI" },
+        { roll: "IS25-052", name: "RASMIRANJAN SWAIN" },
+        { roll: "IS25-055", name: "RUPALI MALLICK" },
+        { roll: "IS25-056", name: "SASWAT PRITAM PUTHAL" },
+        { roll: "IS25-057", name: "SHASHI BHUSAN PRUSTY" },
+        { roll: "IS25-058", name: "SHIBA SHANKAR SETHI" },
+        { roll: "IS25-060", name: "SMRUTISANGITA BEHERA" },
+        { roll: "IS25-063", name: "SUBHAM HATI" },
+        { roll: "IS25-070", name: "ADYASA ROUT" },
+        { roll: "IS25-072", name: "NIRANJAN MALIK" },
+        { roll: "IS25-073", name: "SATYABRATA MOHANTY" },
+        { roll: "IS25-074", name: "SONALI SAHU" },
+        { roll: "IS25-075", name: "SUSANTA KUMAR BEHERA" },
+        { roll: "IS25-075_2", name: "SUMANTA KU BEHERA", displayRoll: "IS25-075" },
+        { roll: "IS25-077", name: "AMIT KUMAR BEHERA" },
+        { roll: "IS25-078", name: "DIBYA KRISHNA PATRA" },
+        { roll: "IS25-079", name: "MIRJA KHALID RAZA BEG" },
+        { roll: "IS25-080", name: "BHABESH KUMAR SAHU" },
+        { roll: "IS25-081", name: "BIBHU KISHORE MAJHI" },
+        { roll: "IS25-082", name: "GITARANI BEHERA" }
       ]
     };
 
@@ -761,7 +772,7 @@
     };
 
     function submittedSessions(subj, grp) {
-      return Object.values(db).filter(s => s.subject === subj && s.group === grp && s.submitted);
+      return Object.values(db).filter(s => s && !s.deleted && s.subject === subj && s.group === grp && s.submitted);
     }
 
     function countSessionStatuses(sess) {
@@ -795,7 +806,7 @@
       const grpFilter = grpFilterEl ? grpFilterEl.value : "ALL";
 
       const sessions = Object.values(db)
-        .filter(s => s && s.submitted)
+        .filter(s => s && !s.deleted && s.submitted)
         .filter(s => subjFilter === "ALL" || s.subject === subjFilter)
         .filter(s => grpFilter === "ALL" || s.group === grpFilter)
         .sort((a, b) => {
@@ -885,7 +896,7 @@
       const q = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
       const rows = [["Subject", "Group", "Date", "Topic", "Submitted", "Roll", "Name", "Status", "Next assigned", "Teacher"]];
       Object.values(db)
-        .filter(s => subjects.includes(s.subject))
+        .filter(s => s && !s.deleted && subjects.includes(s.subject))
         .sort((a, b) => (a.subject + a.group + a.date).localeCompare(b.subject + b.group + b.date))
         .forEach(s => {
           (rosters[s.group] || []).forEach(stu => {
@@ -1018,7 +1029,7 @@
     function sessionsForDate(subj, grp, dateStr) {
       const base = `${subj}_${grp}_${dateStr}`;
       return Object.values(db)
-        .filter(s => s && s.subject === subj && s.group === grp && s.date === dateStr)
+        .filter(s => s && !s.deleted && s.subject === subj && s.group === grp && s.date === dateStr)
         .sort((a, b) => {
           if (a.key === base) return -1;
           if (b.key === base) return 1;
@@ -1129,7 +1140,7 @@
         selectionSessionKey = key;
       }
       editing = false;
-      if (db[key]) {
+      if (db[key] && !db[key].deleted) {
         currentSession = db[key];
       } else {
         const recs = {};
@@ -1137,7 +1148,7 @@
         currentSession = {
           key, subject: currentSubject, group: currentGroup,
           date: document.getElementById("sessionDate").value,
-          topic: "", submitted: false, createdAt: Date.now(), records: recs
+          topic: "", submitted: false, deleted: false, createdAt: Date.now(), records: recs
         };
       }
       // Normalize older/incomplete saved sessions before rendering or editing them.
@@ -1151,17 +1162,75 @@
       });
 
       document.getElementById("sessionTopic").value = currentSession.topic || "";
+      const topicMsg = document.getElementById("topicActionMsg");
+      if (topicMsg) topicMsg.classList.add("hidden");
       renderCarryForward();
       renderStudentRollCall();
     }
 
     function isLocked() { return currentSession.submitted && !editing; }
 
+    function showTopicFeedback(text) {
+      const el = document.getElementById("topicActionMsg");
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove("hidden");
+      setTimeout(() => { if (el.textContent === text) el.classList.add("hidden"); }, 3500);
+    }
+
+    function focusEditTopicName() {
+      const input = document.getElementById("sessionTopic");
+      if (!input) return;
+      input.focus();
+      input.select();
+      showTopicFeedback("Edit the topic name above, then click Save Topic Name (or press Enter).");
+    }
+
     function startOrLoadTopic() {
-      if (isLocked()) return;
-      currentSession.topic = document.getElementById("sessionTopic").value.trim();
+      const newTopic = document.getElementById("sessionTopic").value.trim();
+      if (!newTopic) {
+        showNotice("Please enter a topic name before saving.", "Topic Name Required");
+        return;
+      }
+      currentSession.topic = newTopic;
+      currentSession.deleted = false;
       commit(currentSession);
+      renderCarryForward();
       renderStudentRollCall();
+      showTopicFeedback("Topic name updated.");
+    }
+
+    function deleteCurrentTopic() {
+      if (!currentSession) return;
+      const label = currentSession.topic ? `"${currentSession.topic}"` : "this untitled topic";
+      const dateLabel = fmtDate(currentSession.date);
+      showConfirmDialog(
+        `Delete ${label} on ${dateLabel} (${currentSubject} • ${currentGroup})?\n\nThis will remove this topic and its attendance records from this device and sync the deletion to your Google Sheet.`,
+        () => {
+          const targetKey = currentSession.key;
+          if (db[targetKey]) {
+            const tombstone = {
+              key: targetKey,
+              subject: currentSession.subject,
+              group: currentSession.group,
+              date: currentSession.date,
+              topic: "",
+              submitted: false,
+              deleted: true,
+              records: {}
+            };
+            commit(tombstone);
+          }
+          activeSessionKey = "";
+          selectedStudents.clear();
+          currentCardIndex = 0;
+          loadDateSession();
+          updateGroupBadges();
+          renderHomeGraphs();
+          showTopicFeedback("Topic deleted.");
+        },
+        "Delete Topic"
+      );
     }
 
     function setStudentViewMode(mode) {
@@ -1363,6 +1432,8 @@
       document.getElementById("markAllBtn").classList.toggle("hidden", locked);
       document.getElementById("finalSubmitBtn").classList.toggle("hidden", locked);
       document.getElementById("finalSubmitBtn").innerText = editing ? "Save Changes" : "Final Submit Attendance";
+      const saveTopicBtn = document.getElementById("saveTopicBtn");
+      if (saveTopicBtn) saveTopicBtn.innerText = session.topic ? "Save Topic Name" : "Set Topic";
       document.getElementById("submitStatusMsg").innerText = locked
         ? "Session submitted & locked. Click 'Edit Saved Data' if a student answers on time."
         : (editing ? "Editing — remember to click Save Changes." : "");
